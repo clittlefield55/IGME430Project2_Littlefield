@@ -83,6 +83,29 @@ const signup = (request, response) => {
   });
 };
 
+const changePassword = (request, response) => {
+  const req = request;
+  const res = response;
+
+  const changedAccount = Account.AccountModel.findOne(req.session.account._id);
+  const username = changedAccount.username;
+  const password = req.body.current;
+  return Account.AccountModel.authenticate(username, password, (err, account) => {
+    if (req.body.pass !== req.body.pass2) {
+      return res.status(400).json({ error: 'RAWR! Passwords do not match' });
+    }
+
+    if (err || !account) {
+      return res.status(401).json({ error: 'Wrong username or password' });
+    }
+
+    changedAccount.password = req.body.pass;
+    const changePromise = changedAccount.save();
+
+    return changePromise;
+  });
+};
+
 const getToken = (request, response) => {
   const req = request;
   const res = response;
@@ -100,3 +123,4 @@ module.exports.logout = logout;
 module.exports.signupPage = signupPage;
 module.exports.signup = signup;
 module.exports.getToken = getToken;
+module.exports.changePassword = changePassword;

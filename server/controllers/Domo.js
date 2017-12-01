@@ -57,6 +57,20 @@ const getDomos = (request, response) => {
   });
 };
 
+const playWithDomo = (request, response) => {
+  const req = request;
+  const res = response;
+
+  const changedDomo = Domo.DomoModel.findOne(req.body._id);
+
+  changedDomo.happiness += req.body.happiness;
+
+  const changePromise = changedDomo.save();
+
+  return res.json({ result: changePromise });
+};
+
 module.exports.makerPage = makerPage;
 module.exports.getDomos = getDomos;
 module.exports.make = makeDomo;
+module.exports.playWithDomo = playWithDomo;

@@ -15,6 +15,35 @@ const handleDomo = (e) => {
     return false;
 };
 
+const handlePassChange = (e) => {
+    e.preventDefault();
+
+    $("#domoMessage").animate({width:'hide'}, 350);
+    
+        if($("#curr").val() == '' || $("#pass").val() == ''|| $("#pass2").val() == '') {
+            handleError("RAWR! All fields are required");
+            return false;
+        }
+    
+        if($("#pass").val() !== $("#pass2").val()) {
+            handleError("RAWR! Passwords do not match");
+            return false;
+        }
+    
+        sendAjax('POST', $("#passChangeForm").attr("action"), $("#passChangeForm").serialize(), redirect);
+    
+
+    return false;
+};
+
+const handleAction = (e) => {
+    e.preventDefault();
+
+    $("#domoMessage").animate({width:'hide'}, 350);
+
+    sendAjax('POST', $("#actionForm").attr("action"), $("#actionForm").serialize(), redirect);
+}
+
 const DomoForm = (props) => {
     return (
         <form id="domoForm"
@@ -71,11 +100,19 @@ const DomoActions = function (props) {
 
     const actionMenu = props.domos.map(function(domo) {
         return ( 
-        <div key={domo._id} className="domo">
+        <div data-key={domo._id} className="domo">
             <img src="/assets/img/domoface.jpeg" alt="domo face" className="domoFace" />
             <h3 className="domoName"> Name: {domo.name} </h3>
             <h3 className="domoAge"> Age: {domo.age} </h3> 
-            <select>
+            <form
+                id="actionForm"
+                onSubmit={handleAction}
+                name="actionForm"
+                action="/happy"
+                method="POST"
+            >
+
+            <select name="happiness" form="actionForm">
                 <option value="1"> Pet Domo </option>
                 <option value="5"> Give Treat </option>
                 <option value="10"> Cuddle Domo </option>
@@ -83,7 +120,10 @@ const DomoActions = function (props) {
                 <option value="-10"> Tease Domo </option>
                 <option value="-100"> Kick Domo </option>
             </select>
-            <button type="button">Use</button><br />
+            <input type="hidden" name="_id" value={domo._id} />
+            <input type="hidden" name="_csrf" value={props.csrf} />
+            <input type="submit" value="Use" />
+            </form>
             <h3 className="domoName">Happiness: {domo.happiness}</h3>
         </div>
         )
@@ -96,6 +136,27 @@ const DomoActions = function (props) {
     );
 };
 
+const PassChangeForm = (props) => {
+    return (
+        <form id="passChangeForm"
+              name="passChangeForm"
+              onSubmit={handlePassChange}
+              action="/newPass"
+              method="POST"
+              className="mainForm"
+        >
+        <label htmlFor="current">Current Password: </label>
+        <input id="user" type="password" name="current" placeholder="current" />
+        <label htmlFor="pass">New Password: </label>
+        <input id="pass" type="password" name="pass" placeholder="password" />
+        <label htmlFor="pass2">New Password: </label>
+        <input id="pass2" type="password" name="pass2" placeholder="retype password" />
+        <input type="hidden" name="_csrf" value={props.csrf}/>
+        <input className="formSubmit" type="submit" value="Submit" />
+       </form>
+    )
+};
+
 const loadDomosFromServer = () => {
     sendAjax('GET', '/getDomos', null, (data) => {
         ReactDOM.render(
@@ -104,12 +165,20 @@ const loadDomosFromServer = () => {
     });
 };
 
-const getActions = () => {
+const getActions = (csrf) => {
     sendAjax('GET', '/getDomos', null, (data) => {
+        data.domos[csrf] = csrf;
+
         ReactDOM.render(
-            <DomoActions domos={data.domos} />, document.querySelector("#domos")
+            <DomoActions domos={data.domos}/>, document.querySelector("#domos")
         );
     });
+};
+
+const getPassChangeForm = (csrf) => {
+    ReactDOM.render(
+    <PassChangeForm csrf={csrf}/>, document.querySelector("#domos")
+    );
 };
 
 const setup = function(csrf) {
@@ -123,16 +192,23 @@ const setup = function(csrf) {
 
     const actionButton = document.querySelector("#actionButton");
     const makerButton = document.querySelector("#makerButton");
+    const changeButton = document.querySelector("#changeButton");
     
     actionButton.addEventListener("click", (e) => {
         e.preventDefault();
-        getActions();
+        getActions(csrf);
         return false;
     });
 
     makerButton.addEventListener("click", (e) => {
         e.preventDefault();
         loadDomosFromServer();
+        return false;
+    });
+
+    changeButton.addEventListener("click", (e) => {
+        e.preventDefault();
+        getPassChangeForm(csrf);
         return false;
     });
 
